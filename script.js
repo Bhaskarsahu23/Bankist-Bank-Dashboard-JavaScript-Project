@@ -189,9 +189,32 @@ const updateUI = function (acc) {
   calcDisplaySummary(acc);
 };
 
+// log out timer
+
+const startLogOutTimer = function () {
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, '0');
+    const sec = String(Math.trunc(time % 60)).padStart(2, '0');
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      clearInterval(timer);
+      labelBalance.textContent = 'Log in to get started';
+      containerApp.style.opacity = 0;
+    }
+
+    time--;
+  };
+  let time = 300;
+  tick();
+  const timer = setInterval(tick, 1000);
+
+  return timer;
+};
+
 //  login implimantation
 
-let currentAccount;
+let currentAccount, timer;
 
 btnLogin.addEventListener('click', function (e) {
   e.preventDefault();
@@ -206,6 +229,8 @@ btnLogin.addEventListener('click', function (e) {
     inputLoginUsername.value = inputClosePin.value = '';
     inputLoginPin.blur();
     updateUI(currentAccount);
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
 
     const now = new Date();
     const day = `${now.getDate()}`.padStart(2, 0);
@@ -237,6 +262,8 @@ btnTransfer.addEventListener('click', function (e) {
     currentAccount.movementsDates.push(new Date());
     reciverAcc.movementsDates.push(new Date());
     updateUI(currentAccount);
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
   inputTransferAmount.value = inputTransferTo.value = '';
 });
@@ -250,9 +277,13 @@ btnLoan.addEventListener('click', function (e) {
     amount > 0 &&
     currentAccount.movements.some((mov) => mov >= amount / 0.1)
   ) {
-    currentAccount.movements.push(amount);
-    currentAccount.movementsDates.push(new Date());
-    updateUI(currentAccount);
+    setTimeout(function () {
+      currentAccount.movements.push(amount);
+      currentAccount.movementsDates.push(new Date());
+      updateUI(currentAccount);
+      clearInterval(timer);
+      timer = startLogOutTimer();
+    }, 2500);
   }
   inputLoanAmount.value = '';
 });
